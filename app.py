@@ -49,9 +49,9 @@ hope_instruction = """
 """
 
 # دمج المفتاح الخاص بك مباشرة داخل الكود ليعمل فوراً بدون الاعتماد على السيرفر
-api_key = "AlzaSyDDjq5CmlGrYfDuzZsNmCuH9daqcddgiSo"
+api_key = "AIzaSyDDjq5CmlGrYfDuzZsNmCuH9daqcddgiSo"
 try:
-    client = genai.Client(api_key=api_key)
+    client = genai.Client(api_key=AIzaSyDDjq5CmlGrYfDuzZsNmCuH9daqcddgiSo)
     
     if "messages" not in st.session_state:
         st.session_state.messages = []
