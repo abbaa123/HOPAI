@@ -26,7 +26,7 @@ st.markdown("""
 # ==========================================
 # 2. ربط قاعدة البيانات (Google Sheets)
 # ==========================================
-# ⚠️ ضع هنا رابط الجدول الخاص بك الذي نسخته في الخطوة الأولى
+# ⚠️ ضع هنا رابط الجدول الخاص بك الذي نسخته من المتصفح (تأكد من جعله Editor في الـ Share)
 GSHEET_URL = "https://docs.google.com/spreadsheets/d/1dO5BahsAQxNaFCF6Igu60NULyd3_gGTwAIP-bCexs2c/edit?gid=0#gid=0"
 
 try:
@@ -35,7 +35,7 @@ try:
 except:
     df = pd.DataFrame(columns=["name", "email", "password"])
 
-# إدارة جلسة الدخول
+# إدارة جلسة الدخول بداخل السيرفر
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 if "user_name" not in st.session_state:
@@ -46,17 +46,18 @@ if "user_name" not in st.session_state:
 # ==========================================
 if not st.session_state.logged_in:
     st.markdown("<div class='auth-box'>", unsafe_allow_html=True)
-    st.image("https://img.icons8.com/fluent/96/000000/sparkling.png", width=70)
+    st.markdown("<h2 style='text-align: center;'>✨ Hope AI</h2>", unsafe_allow_html=True)
     
     tab1, tab2 = st.tabs(["🔐 تسجيل الدخول", "📝 إنشاء حساب جديد"])
     
-    # واجهة تسجيل الدخول
+    # واجهة تسجيل الدخول الحالية
     with tab1:
         login_email = st.text_input("الإيميل الإلكتروني", key="login_email_input").strip().lower()
         login_pass = st.text_input("كلمة المرور", type="password", key="login_pass_input")
         
         if st.button("دخول للمنصة"):
             if login_email and login_pass:
+                # التحقق من وجود الحساب بداخل ملف الإكسل
                 user_row = df[df["email"] == login_email]
                 if not user_row.empty and str(user_row.iloc[0]["password"]) == str(login_pass):
                     st.session_state.logged_in = True
@@ -68,27 +69,34 @@ if not st.session_state.logged_in:
             else:
                 st.warning("يرجى ملء جميع الحقول")
 
-    # واجهة إنشاء الحساب الجديد
+    # واجهة إنشاء الحساب الجديد المتصلة بالجدول
     with tab2:
         new_name = st.text_input("الاسم الكامل", key="new_name_input").strip()
-        new_email = st.text_input("الإيميل الحقيقي", key="new_email_input").strip().lower()
+        new_email = st.text_input("الإيميل الإلكتروني", key="new_email_input").strip().lower()
         new_pass = st.text_input("اختر كلمة مرور", type="password", key="new_pass_input")
         
         if st.button("تأكيد إنشاء الحساب"):
             if new_name and new_email and new_pass:
                 if new_email in df["email"].values:
-                    st.error("⚠️ هذا الإيميل مسجل مسبقاً! انتقل لتبويب تسجيل الدخول.")
+                    st.error("⚠️ هذا الإيميل مسجل مسبقاً في المنصة!")
                 else:
                     # إضافة الحساب الجديد لملف الإكسل فوراً
                     new_user = pd.DataFrame([[new_name, new_email, new_pass]], columns=["name", "email", "password"])
                     updated_df = pd.concat([df, new_user], ignore_index=True)
-                    conn.update(spreadsheet=GSHEET_URL, data=updated_df)
-                    st.success("🎉 تم إنشاء حسابك بنجاح! يمكنك الآن الدخول من التبويب الأول.")
+                    
+                    try:
+                        conn.update(spreadsheet=GSHEET_URL, data=updated_df)
+                        st.cache_data.clear() # مسح الكاش ليتعرف السيرفر على البيانات فوراً
+                        st.success("🎉 تم إنشاء حسابك بنجاح! يمكنك الآن الانتقال لتبويب تسجيل الدخول.")
+                        st.balloons()
+                    except Exception as e:
+                        st.error(f"حدث خطأ في صلاحية الوصول للجدول السحابي. يرجى التأكد من ضبطه كـ Editor لكل من يملك الرابط.")
             else:
                 st.warning("يرجى ملء جميع الحقول المطلوبة")
                 
     st.markdown("</div>", unsafe_allow_html=True)
-    # ==========================================
+
+# ==========================================
 # 4. تشغيل المنصة الأساسية بعد نجاح الدخول
 # ==========================================
 else:
@@ -104,7 +112,7 @@ else:
             st.rerun()
         st.markdown("---")
         st.markdown("### عن المبادرة 🇮🇶")
-        st.write("منصة Hope AI مفتوحة لخدمة الطلاب والخريجين لتطوير المهارات.")
+        st.write("منصة Hope AI مفتوحة لخدمة الطلاب والخريجين وأبناء الشعب العراقي لتطوير المهارات وبناء القدرات.")
         st.caption("إشراف وتطوير وطني 100%")
 
     # الواجهة الرئيسية للدردشة لـ Hope AI
@@ -116,6 +124,7 @@ else:
     api_key = "AIzaSyAiQswVwv3CUy8jqB-dTPCGGTP7t8KihLg"
     genai.configure(api_key=api_key)
 
+    # تعليمات النظام والهوية البرمجية لشخصيتك الرقمية
     hope_instruction = """
     أنت الآن ذكاء اصطناعي عراقي متطور اسمك "Hope AI" (ذكاء الأمل).
     رسالتك: تقديم المساعدة، نشر التفاؤل، وتبسيط العلم والعمل لكل العراقيين.
@@ -139,6 +148,7 @@ else:
             with st.chat_message("assistant", avatar="✨"):
                 message_placeholder = st.empty()
                 
+                # استخدام النسخة الأحدث والأسراع في المعالجة
                 model = genai.GenerativeModel(
                     model_name="gemini-2.5-flash",
                     system_instruction=hope_instruction
