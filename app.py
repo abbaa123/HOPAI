@@ -50,7 +50,6 @@ hope_instruction = """
 
 # دمج المفتاح الخاص بك مباشرة داخل الكود ليعمل فوراً بدون الاعتماد على السيرفر
 api_key = "AlzaSyDDjq5CmlGrYfDuzZsNmCuH9daqcddgiSo"
-
 try:
     client = genai.Client(api_key=api_key)
     
