@@ -1,6 +1,5 @@
 import streamlit as st
-from google import genai
-from google.genai import types
+import google.generativeai as genai
 
 # ==========================================
 # 1. إعدادات الهوية البصرية لـ Hope AI
@@ -40,7 +39,11 @@ st.title("مرحباً بك في Hope AI ✨")
 st.markdown("#### بوابتك الذكية لمستقبل أفضل.. كيف يمكنني مساعدتك اليوم؟")
 st.write("---")
 
-# شخصية Hope AI
+# ضبط المفتاح والتهيئة بالطريقة المستقرة
+api_key = "AIzaSyDDjq5CmlGrYfDuzZsNmCuH9daqcddgiSo"
+genai.configure(api_key=api_key)
+
+# شخصية Hope AI التوجيهية
 hope_instruction = """
 أنت الآن ذكاء اصطناعي عراقي متطور اسمك "Hope AI" (ذكاء الأمل).
 رسالتك: تقديم المساعدة، نشر التفاؤل، وتبسيط العلم والعمل لكل العراقيين.
@@ -48,11 +51,7 @@ hope_instruction = """
 قدم الإجابات على شكل نقاط ومنظمة جداً.
 """
 
-# دمج المفتاح الخاص بك مباشرة داخل الكود ليعمل فوراً بدون الاعتماد على السيرفر
-api_key = "AIzaSyDDjq5CmlGrYfDuzZsNmCuH9daqcddgiSo"
 try:
-    client = genai.Client(api_key=AIzaSyDDjq5CmlGrYfDuzZsNmCuH9daqcddgiSo)
-    
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
@@ -68,19 +67,17 @@ try:
         with st.chat_message("assistant", avatar="✨"):
             message_placeholder = st.empty()
             
-            response = client.models.generate_content(
-                model='gemini-2.5-flash',
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    system_instruction=hope_instruction,
-                    temperature=0.7,
-                )
+            # استخدام النموذج المستقر والسريع
+            model = genai.GenerativeModel(
+                model_name="gemini-1.5-flash",
+                system_instruction=hope_instruction
             )
             
+            response = model.generate_content(prompt)
             full_response = response.text
             message_placeholder.markdown(full_response)
             
         st.session_state.messages.append({"role": "assistant", "content": full_response})
 
 except Exception as e:
-    st.error("حدث خطأ أثناء الاتصال بالخادم الذكي. يرجى المحاولة لاحقاً.")
+    st.error(f"حدث خطأ أثناء الاتصال بالخادم الذكي. يرجى التأكد من صلاحية الـ API Key في Google AI Studio.")
